@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ulimit -s unlimited
+
+exe=ghost  ## executable
+
+STR=$(grep -o '/[0-9]*,[0-9]*/' src/param.f90)
+nproc=$(echo $STR | sed 's/\///g' | sed 's/,/*/g' |bc)  ## number of processors
+
+dir=data/log.txt      ## directory of the log file
+
+cat /dev/null > $dir  ## clean the log file
+echo $(date) >> $dir  ## time stamp the log file
+echo >> $dir 
+
+mpirun -np $nproc ./$exe >> $dir &
