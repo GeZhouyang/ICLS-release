@@ -1,7 +1,9 @@
 FC = mpif90
+#FC = mpiifort
 
 FFLAGS := -O3 -ffixed-line-length-none -fdefault-real-8 
-#FFLAGS := -O0 -fbounds-check -g -Wall -Wextra -pedantic -fbacktrace -ffixed-line-length-none -fdefault-real-8 
+#FFLAGS := -O0 -fbounds-check -g -Wall -Wextra -pedantic -fbacktrace -ffixed-line-length-none -fdefault-real-8
+#FFLAGS := -O3 -r8 -mcmodel=medium
 
 BIG := # -mcmodel=medium
 DBG := -g #-traceback
