@@ -63,7 +63,7 @@ Last modified: Feb 13, 2018
  
  **2decomp**: 2D pencil decomposition of the computational domain.
  
- **fft**: Fast Forieur Transform and the cosine transform of the Poisson equation.
+ **fft**: Fast Fourier Transform and the cosine transform of the Poisson equation.
 
 
 # Makefile
