@@ -68,7 +68,7 @@ Last modified: Feb 13, 2018
 
 # Makefile
 
- Machine-dependent compiling commands. 
+ Machine-dependent compiling commands (choose from the available options or add your own). 
 
 
 # run
