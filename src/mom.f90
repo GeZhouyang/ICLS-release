@@ -347,8 +347,8 @@ module mod_mom
     fy(0:i1,0:j1,0:k1) = vnew
     fz(0:i1,0:j1,0:k1) = wnew
    
-    call boundfuv(fx)
-    call boundfuv(fy)
+    call boundfu(fx)
+    call boundfv(fy)
     call boundfw(fz)
    
    
@@ -383,23 +383,12 @@ module mod_mom
               wind_v(i,j,k) = vel_vertice 
    
               !-- W at unew(i,j,k)
-   
-              if ( (k .ge. 3) .and. (k .le. kmax-2) ) then
-   
-                vel_vertice = (fz(i,j,k  ) + fz(i+1,j,k  ) + &
-                               fz(i,j,k-1) + fz(i+1,j,k-1) )/4.
-   
-                wind_w(i,j,k) = vel_vertice
-   
-              else  ! 2nd-order central difference
-   
-                wind_w(i,j,k) = 0.  ! not used
-   
-                convz(i,j,k) = ( (fx(i,j,k)+fx(i,j,k+1))/2.*(fz(i,j,k  )+fz(i+1,j,k  ))/2. - &
-                                 (fx(i,j,k)+fx(i,j,k-1))/2.*(fz(i,j,k-1)+fz(i+1,j,k-1))/2. )/dz
-   
-              endif
-   
+     
+              vel_vertice = (fz(i,j,k  ) + fz(i+1,j,k  ) + &
+                             fz(i,j,k-1) + fz(i+1,j,k-1) )/4.
+ 
+              wind_w(i,j,k) = vel_vertice
+             
             enddo
           enddo
         enddo
@@ -429,21 +418,10 @@ module mod_mom
    
               !-- W at vnew(i,j,k)
    
-              if ( (k .ge. 3) .and. (k .le. kmax-2) ) then
-   
-                vel_vertice = (fz(i,j,k  ) + fz(i,j+1,k  ) + &
-                               fz(i,j,k-1) + fz(i,j+1,k-1) )/4.
-   
-                wind_w(i,j,k) = vel_vertice
-   
-              else  ! 2nd-order central difference
-   
-                wind_w(i,j,k) = 0.  ! not used
-   
-                convz(i,j,k) = ( (fy(i,j,k)+fy(i,j,k+1))/2.*(fz(i,j,k  )+fz(i,j+1,k  ))/2. - &
-                                 (fy(i,j,k)+fy(i,j,k-1))/2.*(fz(i,j,k-1)+fz(i,j+1,k-1))/2. )/dz
-              
-              endif
+              vel_vertice = (fz(i,j,k  ) + fz(i,j+1,k  ) + &
+                             fz(i,j,k-1) + fz(i,j+1,k-1) )/4.
+ 
+              wind_w(i,j,k) = vel_vertice
    
             enddo
           enddo
@@ -478,17 +456,7 @@ module mod_mom
    
               !-- W at wnew(i,j,k)
    
-              if ( (k .ge. 3) .and. (k .le. kmax-2) ) then
-   
-                wind_w(i,j,k) = fz(i,j,k)
-   
-              else  ! 2nd-order central difference
-   
-                wind_w(i,j,k) = 0.  ! not used
-   
-                convz(i,j,k) = fz(i,j,k) * (fz(i,j,k+1) - fz(i,j,k-1))/2. /dz
-   
-              endif
+              wind_w(i,j,k) = fz(i,j,k)
    
             enddo
           enddo
@@ -684,96 +652,92 @@ module mod_mom
    
           !-- Z-derivative
    
-          if ( (k .ge. 3) .and. (k .le. kmax-2) ) then
+          if (wind_w(i,j,k) .gt. 0.) then
    
-            if (wind_w(i,j,k) .gt. 0.) then
+            v1 = (fdir(i,j,k-2) - fdir(i,j,k-3))/dz  
+            v2 = (fdir(i,j,k-1) - fdir(i,j,k-2))/dz
+            v3 = (fdir(i,j,k  ) - fdir(i,j,k-1))/dz
+            v4 = (fdir(i,j,k+1) - fdir(i,j,k  ))/dz
+            v5 = (fdir(i,j,k+2) - fdir(i,j,k+1))/dz
    
-              v1 = (fdir(i,j,k-2) - fdir(i,j,k-3))/dz  
-              v2 = (fdir(i,j,k-1) - fdir(i,j,k-2))/dz
-              v3 = (fdir(i,j,k  ) - fdir(i,j,k-1))/dz
-              v4 = (fdir(i,j,k+1) - fdir(i,j,k  ))/dz
-              v5 = (fdir(i,j,k+2) - fdir(i,j,k+1))/dz
+            !-- Smoothness indicators
    
-              !-- Smoothness indicators
-   
-              S1 = (13./12.) * ( v1 - 2.*v2 + v3 )**2 &
-                   + (1./4.) * ( v1 - 4.*v2 + 3.*v3)**2
+            S1 = (13./12.) * ( v1 - 2.*v2 + v3 )**2 &
+                 + (1./4.) * ( v1 - 4.*v2 + 3.*v3)**2
           
-              S2 = (13./12.) * (v2 - 2.*v3 + v4)**2 &
-                   + (1./4.) * (v2 - v4)**2
+            S2 = (13./12.) * (v2 - 2.*v3 + v4)**2 &
+                 + (1./4.) * (v2 - v4)**2
           
-              S3 = (13./12.) * (v3 - 2.*v4 + v5)**2 &
-                   + (1./4.) * (3.*v3 - 4.*v4 + v5)**2
+            S3 = (13./12.) * (v3 - 2.*v4 + v5)**2 &
+                 + (1./4.) * (3.*v3 - 4.*v4 + v5)**2
    
-              !-- Nonlinear weights
+            !-- Nonlinear weights
           
-              a1 = sigma_1 / (eps_weno + S1)**2
-              a2 = sigma_2 / (eps_weno + S2)**2
-              a3 = sigma_3 / (eps_weno + S3)**2
+            a1 = sigma_1 / (eps_weno + S1)**2
+            a2 = sigma_2 / (eps_weno + S2)**2
+            a3 = sigma_3 / (eps_weno + S3)**2
           
-              w1 = a1 / (a1 + a2 + a3)
-              w2 = a2 / (a1 + a2 + a3)
-              w3 = a3 / (a1 + a2 + a3)
+            w1 = a1 / (a1 + a2 + a3)
+            w2 = a2 / (a1 + a2 + a3)
+            w3 = a3 / (a1 + a2 + a3)
    
-              !-- Minus flux
+            !-- Minus flux
           
-              f_z = w1 * ( (1./3.)  * v1   &
-                         - (7./6.)  * v2   &
-                         + (11./6.) * v3 ) &
-                  + w2 * ( (-1./6.) * v2   &
-                         + (5./6.)  * v3   &
-                         + (1./3.)  * v4 ) &
-                  + w3 * ( (1./3.)  * v3   &
-                         + (5./6.)  * v4   &
-                         - (1./6.)  * v5 )
+            f_z = w1 * ( (1./3.)  * v1   &
+                       - (7./6.)  * v2   &
+                       + (11./6.) * v3 ) &
+                + w2 * ( (-1./6.) * v2   &
+                       + (5./6.)  * v3   &
+                       + (1./3.)  * v4 ) &
+                + w3 * ( (1./3.)  * v3   &
+                       + (5./6.)  * v4   &
+                       - (1./6.)  * v5 )
           
-            else !++
+          else !++
    
-              v1 = (fdir(i,j,k+3) - fdir(i,j,k+2))/dz 
-              v2 = (fdir(i,j,k+2) - fdir(i,j,k+1))/dz
-              v3 = (fdir(i,j,k+1) - fdir(i,j,k  ))/dz
-              v4 = (fdir(i,j,k  ) - fdir(i,j,k-1))/dz
-              v5 = (fdir(i,j,k-1) - fdir(i,j,k-2))/dz
+            v1 = (fdir(i,j,k+3) - fdir(i,j,k+2))/dz 
+            v2 = (fdir(i,j,k+2) - fdir(i,j,k+1))/dz
+            v3 = (fdir(i,j,k+1) - fdir(i,j,k  ))/dz
+            v4 = (fdir(i,j,k  ) - fdir(i,j,k-1))/dz
+            v5 = (fdir(i,j,k-1) - fdir(i,j,k-2))/dz
    
-              !++ Smoothness indicators
+            !++ Smoothness indicators
    
-              S1 = (13./12.) * ( v1 - 2.*v2 + v3 )**2 &
-                   + (1./4.) * ( v1 - 4.*v2 + 3.*v3)**2
+            S1 = (13./12.) * ( v1 - 2.*v2 + v3 )**2 &
+                 + (1./4.) * ( v1 - 4.*v2 + 3.*v3)**2
           
-              S2 = (13./12.) * (v2 - 2.*v3 + v4)**2 &
-                   + (1./4.) * (v2 - v4)**2
+            S2 = (13./12.) * (v2 - 2.*v3 + v4)**2 &
+                 + (1./4.) * (v2 - v4)**2
           
-              S3 = (13./12.) * (v3 - 2.*v4 + v5)**2 &
-                   + (1./4.) * (3.*v3 - 4.*v4 + v5)**2
+            S3 = (13./12.) * (v3 - 2.*v4 + v5)**2 &
+                 + (1./4.) * (3.*v3 - 4.*v4 + v5)**2
    
-              !++ Nonlinear weights
+            !++ Nonlinear weights
           
-              a1 = sigma_1 / (eps_weno + S1)**2
-              a2 = sigma_2 / (eps_weno + S2)**2
-              a3 = sigma_3 / (eps_weno + S3)**2
+            a1 = sigma_1 / (eps_weno + S1)**2
+            a2 = sigma_2 / (eps_weno + S2)**2
+            a3 = sigma_3 / (eps_weno + S3)**2
           
-              w1 = a1 / (a1 + a2 + a3)
-              w2 = a2 / (a1 + a2 + a3)
-              w3 = a3 / (a1 + a2 + a3)
+            w1 = a1 / (a1 + a2 + a3)
+            w2 = a2 / (a1 + a2 + a3)
+            w3 = a3 / (a1 + a2 + a3)
    
-              !++ Plus flux
+            !++ Plus flux
           
-              f_z = w1 * ( (1./3.)  * v1   &
-                         - (7./6.)  * v2   &
-                         + (11./6.) * v3 ) &
-                  + w2 * ( (-1./6.) * v2   &
-                         + (5./6.)  * v3   &
-                         + (1./3.)  * v4 ) &
-                  + w3 * ( (1./3.)  * v3   &
-                         + (5./6.)  * v4   &
-                         - (1./6.)  * v5 )
-            endif
-   
-            ! Time derivative (z-component)
-           
-            convz(i,j,k) = wind_w(i,j,k)*f_z
-   
+            f_z = w1 * ( (1./3.)  * v1   &
+                       - (7./6.)  * v2   &
+                       + (11./6.) * v3 ) &
+                + w2 * ( (-1./6.) * v2   &
+                       + (5./6.)  * v3   &
+                       + (1./3.)  * v4 ) &
+                + w3 * ( (1./3.)  * v3   &
+                       + (5./6.)  * v4   &
+                       - (1./6.)  * v5 )
           endif
+   
+          ! Time derivative (z-component)
+          
+          convz(i,j,k) = wind_w(i,j,k)*f_z
     
         enddo
       enddo

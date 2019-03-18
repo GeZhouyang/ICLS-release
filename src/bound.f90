@@ -5,7 +5,7 @@ module mod_bound
   implicit none
 
   private
-  public bounduvw,boundp,boundc, boundfuv,boundfw, boundsls,boundj,boundmls,boundvof, &
+  public bounduvw,boundp,boundc, boundfu,boundfv,boundfw, boundsls,boundj,boundmls,boundvof, &
          updthalos, updthalos_1d, updthalos_ls, updthalos_mls
 
 contains
@@ -307,7 +307,7 @@ contains
 
   !------------------------
   !
-  subroutine boundfuv(flux)
+  subroutine boundfu(flux)
 
     use mpi
     use mod_common_mpi
@@ -315,6 +315,13 @@ contains
     integer :: i,j,k
     real, dimension(-2:,-2:,-2:) :: flux
 
+    write(*,*) '---------------------'
+    write(*,*) 'Bummer! WENO5 is not fully implemented yet (ghost points).'
+    write(*,*) 'It may produce erroneous results when used with Inflow/Outflow B.C. or at high Re.'
+    write(*,*) 'This should be fixed later.'
+    write(*,*) 'Program aborted.'
+    stop
+    
     !if(isfreeslip) then
     if (.not. ns_np) then
        do j=0,j1
@@ -339,7 +346,19 @@ contains
 
 
     return
-  end subroutine boundfuv
+  end subroutine boundfu
+
+  subroutine boundfv(flux)
+
+    use mpi
+    use mod_common_mpi
+
+    integer :: i,j,k
+    real, dimension(-2:,-2:,-2:) :: flux
+
+
+    return
+  end subroutine boundfv
 
 
   !-----------------------
