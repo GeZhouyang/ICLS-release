@@ -215,6 +215,8 @@ integer :: i,j,k,im,jm,km,it,jt,iloc,jloc
  character*3 number
  character*7 filenumber
 
+ npoints=0 !!this was not initialized in earlier versions...
+ 
 !# plot in paraview 
 !aux(:,:,:) = ynew(1:imax,1:jmax,1:kmax)
 !call write2dplane(aux,1,itot/2,'yzy',istep)
